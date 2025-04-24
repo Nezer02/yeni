@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Controller with WebSocket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .message-box {
+            margin-top: 20px;
+            font-size: 18px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 50px;
+        }
+
+        .message-box p {
+            margin: 0;
+            padding: 5px;
+            font-size: 20px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Robot Controller</h1>
+    <div>
+        <button onclick="sendCommand('UP')">Move Up</button>
+        <button onclick="sendCommand('DOWN')">Move Down</button>
+        <button onclick="sendCommand('LEFT')">Move Left</button>
+        <button onclick="sendCommand('RIGHT')">Move Right</button>
+    </div>
+
+    <div class="message-box">
+        <h3>Latest Message:</h3>
+        <p id="latestMessage">Waiting for messages...</p>
+    </div>
+
+    <script>
+        const socket = new WebSocket("wss://websocket-js-production-f89e.up.railway.app/");
+
+        socket.onopen = function () {
+            console.log("✅ Connected to WebSocket");
+            socket.send(JSON.stringify({ type: "register", robotName: "robot1" }));
+        };
+
+        socket.onmessage = function (event) {
+            let data = JSON.parse(event.data);
+            if (data.type === "command") {
+                document.getElementById("latestMessage").textContent = "Received: " + data.command;
+            }
+        };
+
+        function sendCommand(command) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: "command", command: command }));
+                document.getElementById("latestMessage").textContent = command;
+                console.log("✅ Command sent to WebSocket");
+            } else {
+                console.log("❌ WebSocket is not connected");
+            }
+        }
+    </script>
+</body>
+
+</html>
